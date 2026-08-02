@@ -33,7 +33,7 @@ let turn = 0;
 export async function sendMessage(incidentId: string, message: string): Promise<AgentReply> {
   if (DEMO_MODE) {
     await delay(400 + Math.round(Math.random() * 500));
-    const canned = CANNED[turn % CANNED.length];
+    const canned = CANNED[turn % CANNED.length]!;
     turn += 1;
     return {
       text: canned.text,
