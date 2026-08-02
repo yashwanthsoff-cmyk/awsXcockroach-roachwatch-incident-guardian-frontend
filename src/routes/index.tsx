@@ -4,7 +4,6 @@ import { Activity, ArrowRight, Clock, Database, GitCompare, ServerCog, Sparkle }
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { ClusterDiagram } from "@/components/cluster-diagram";
 import { SeverityBadge, StatusBadge, timeSince } from "@/components/status-bits";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

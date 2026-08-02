@@ -10,7 +10,12 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ChatRouteImport } from './routes/chat'
+import { Route as FailoverRouteImport } from './routes/failover'
+import { Route as InspectorRouteImport } from './routes/inspector'
 import { Route as MemoryRouteImport } from './routes/memory'
+import { Route as RecurrenceRouteImport } from './routes/recurrence'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as IncidentsIndexRouteImport } from './routes/incidents.index'
 import { Route as IncidentsIdRouteImport } from './routes/incidents.$id'
 
@@ -19,9 +24,34 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ChatRoute = ChatRouteImport.update({
+  id: '/chat',
+  path: '/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FailoverRoute = FailoverRouteImport.update({
+  id: '/failover',
+  path: '/failover',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InspectorRoute = InspectorRouteImport.update({
+  id: '/inspector',
+  path: '/inspector',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MemoryRoute = MemoryRouteImport.update({
   id: '/memory',
   path: '/memory',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RecurrenceRoute = RecurrenceRouteImport.update({
+  id: '/recurrence',
+  path: '/recurrence',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IncidentsIndexRoute = IncidentsIndexRouteImport.update({
@@ -37,34 +67,82 @@ const IncidentsIdRoute = IncidentsIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/chat': typeof ChatRoute
+  '/failover': typeof FailoverRoute
+  '/inspector': typeof InspectorRoute
   '/memory': typeof MemoryRoute
+  '/recurrence': typeof RecurrenceRoute
+  '/settings': typeof SettingsRoute
   '/incidents/$id': typeof IncidentsIdRoute
   '/incidents/': typeof IncidentsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/chat': typeof ChatRoute
+  '/failover': typeof FailoverRoute
+  '/inspector': typeof InspectorRoute
   '/memory': typeof MemoryRoute
+  '/recurrence': typeof RecurrenceRoute
+  '/settings': typeof SettingsRoute
   '/incidents/$id': typeof IncidentsIdRoute
   '/incidents': typeof IncidentsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/chat': typeof ChatRoute
+  '/failover': typeof FailoverRoute
+  '/inspector': typeof InspectorRoute
   '/memory': typeof MemoryRoute
+  '/recurrence': typeof RecurrenceRoute
+  '/settings': typeof SettingsRoute
   '/incidents/$id': typeof IncidentsIdRoute
   '/incidents/': typeof IncidentsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/memory' | '/incidents/$id' | '/incidents/'
+  fullPaths:
+    | '/'
+    | '/chat'
+    | '/failover'
+    | '/inspector'
+    | '/memory'
+    | '/recurrence'
+    | '/settings'
+    | '/incidents/$id'
+    | '/incidents/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/memory' | '/incidents/$id' | '/incidents'
-  id: '__root__' | '/' | '/memory' | '/incidents/$id' | '/incidents/'
+  to:
+    | '/'
+    | '/chat'
+    | '/failover'
+    | '/inspector'
+    | '/memory'
+    | '/recurrence'
+    | '/settings'
+    | '/incidents/$id'
+    | '/incidents'
+  id:
+    | '__root__'
+    | '/'
+    | '/chat'
+    | '/failover'
+    | '/inspector'
+    | '/memory'
+    | '/recurrence'
+    | '/settings'
+    | '/incidents/$id'
+    | '/incidents/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ChatRoute: typeof ChatRoute
+  FailoverRoute: typeof FailoverRoute
+  InspectorRoute: typeof InspectorRoute
   MemoryRoute: typeof MemoryRoute
+  RecurrenceRoute: typeof RecurrenceRoute
+  SettingsRoute: typeof SettingsRoute
   IncidentsIdRoute: typeof IncidentsIdRoute
   IncidentsIndexRoute: typeof IncidentsIndexRoute
 }
@@ -78,11 +156,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/chat': {
+      id: '/chat'
+      path: '/chat'
+      fullPath: '/chat'
+      preLoaderRoute: typeof ChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/failover': {
+      id: '/failover'
+      path: '/failover'
+      fullPath: '/failover'
+      preLoaderRoute: typeof FailoverRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/inspector': {
+      id: '/inspector'
+      path: '/inspector'
+      fullPath: '/inspector'
+      preLoaderRoute: typeof InspectorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/memory': {
       id: '/memory'
       path: '/memory'
       fullPath: '/memory'
       preLoaderRoute: typeof MemoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/recurrence': {
+      id: '/recurrence'
+      path: '/recurrence'
+      fullPath: '/recurrence'
+      preLoaderRoute: typeof RecurrenceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/incidents/': {
@@ -104,7 +217,12 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ChatRoute: ChatRoute,
+  FailoverRoute: FailoverRoute,
+  InspectorRoute: InspectorRoute,
   MemoryRoute: MemoryRoute,
+  RecurrenceRoute: RecurrenceRoute,
+  SettingsRoute: SettingsRoute,
   IncidentsIdRoute: IncidentsIdRoute,
   IncidentsIndexRoute: IncidentsIndexRoute,
 }
