@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/memory")({
   validateSearch: (s: Record<string, unknown>) => ({
-    q: typeof s.q === "string" ? s.q : "",
+    q: typeof s["q"] === "string" ? (s["q"] as string) : "",
   }),
   head: () => ({
     meta: [
