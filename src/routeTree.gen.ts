@@ -10,100 +10,136 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ChatRouteImport } from './routes/chat'
-import { Route as FailoverRouteImport } from './routes/failover'
-import { Route as InspectorRouteImport } from './routes/inspector'
-import { Route as MemoryRouteImport } from './routes/memory'
-import { Route as RecurrenceRouteImport } from './routes/recurrence'
-import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as IncidentsIndexRouteImport } from './routes/incidents.index'
-import { Route as IncidentsIdRouteImport } from './routes/incidents.$id'
+import { Route as AuthedRouteImport } from './routes/_authed'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as SignupRouteImport } from './routes/signup'
+import { Route as AuthedChatRouteImport } from './routes/_authed.chat'
+import { Route as AuthedDashboardRouteImport } from './routes/_authed.dashboard'
+import { Route as AuthedFailoverRouteImport } from './routes/_authed.failover'
+import { Route as AuthedInspectorRouteImport } from './routes/_authed.inspector'
+import { Route as AuthedMemoryRouteImport } from './routes/_authed.memory'
+import { Route as AuthedRecurrenceRouteImport } from './routes/_authed.recurrence'
+import { Route as AuthedSettingsRouteImport } from './routes/_authed.settings'
+import { Route as AuthedIncidentsIndexRouteImport } from './routes/_authed.incidents.index'
+import { Route as AuthedIncidentsIdRouteImport } from './routes/_authed.incidents.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ChatRoute = ChatRouteImport.update({
+const AuthedRoute = AuthedRouteImport.update({
+  id: '/_authed',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthedChatRoute = AuthedChatRouteImport.update({
   id: '/chat',
   path: '/chat',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthedRoute,
 } as any)
-const FailoverRoute = FailoverRouteImport.update({
+const AuthedDashboardRoute = AuthedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedFailoverRoute = AuthedFailoverRouteImport.update({
   id: '/failover',
   path: '/failover',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthedRoute,
 } as any)
-const InspectorRoute = InspectorRouteImport.update({
+const AuthedInspectorRoute = AuthedInspectorRouteImport.update({
   id: '/inspector',
   path: '/inspector',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthedRoute,
 } as any)
-const MemoryRoute = MemoryRouteImport.update({
+const AuthedMemoryRoute = AuthedMemoryRouteImport.update({
   id: '/memory',
   path: '/memory',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthedRoute,
 } as any)
-const RecurrenceRoute = RecurrenceRouteImport.update({
+const AuthedRecurrenceRoute = AuthedRecurrenceRouteImport.update({
   id: '/recurrence',
   path: '/recurrence',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthedRoute,
 } as any)
-const SettingsRoute = SettingsRouteImport.update({
+const AuthedSettingsRoute = AuthedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthedRoute,
 } as any)
-const IncidentsIndexRoute = IncidentsIndexRouteImport.update({
+const AuthedIncidentsIndexRoute = AuthedIncidentsIndexRouteImport.update({
   id: '/incidents/',
   path: '/incidents/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthedRoute,
 } as any)
-const IncidentsIdRoute = IncidentsIdRouteImport.update({
+const AuthedIncidentsIdRoute = AuthedIncidentsIdRouteImport.update({
   id: '/incidents/$id',
   path: '/incidents/$id',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthedRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/chat': typeof ChatRoute
-  '/failover': typeof FailoverRoute
-  '/inspector': typeof InspectorRoute
-  '/memory': typeof MemoryRoute
-  '/recurrence': typeof RecurrenceRoute
-  '/settings': typeof SettingsRoute
-  '/incidents/$id': typeof IncidentsIdRoute
-  '/incidents/': typeof IncidentsIndexRoute
+  '/login': typeof LoginRoute
+  '/signup': typeof SignupRoute
+  '/chat': typeof AuthedChatRoute
+  '/dashboard': typeof AuthedDashboardRoute
+  '/failover': typeof AuthedFailoverRoute
+  '/inspector': typeof AuthedInspectorRoute
+  '/memory': typeof AuthedMemoryRoute
+  '/recurrence': typeof AuthedRecurrenceRoute
+  '/settings': typeof AuthedSettingsRoute
+  '/incidents/$id': typeof AuthedIncidentsIdRoute
+  '/incidents/': typeof AuthedIncidentsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/chat': typeof ChatRoute
-  '/failover': typeof FailoverRoute
-  '/inspector': typeof InspectorRoute
-  '/memory': typeof MemoryRoute
-  '/recurrence': typeof RecurrenceRoute
-  '/settings': typeof SettingsRoute
-  '/incidents/$id': typeof IncidentsIdRoute
-  '/incidents': typeof IncidentsIndexRoute
+  '/login': typeof LoginRoute
+  '/signup': typeof SignupRoute
+  '/chat': typeof AuthedChatRoute
+  '/dashboard': typeof AuthedDashboardRoute
+  '/failover': typeof AuthedFailoverRoute
+  '/inspector': typeof AuthedInspectorRoute
+  '/memory': typeof AuthedMemoryRoute
+  '/recurrence': typeof AuthedRecurrenceRoute
+  '/settings': typeof AuthedSettingsRoute
+  '/incidents/$id': typeof AuthedIncidentsIdRoute
+  '/incidents': typeof AuthedIncidentsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/chat': typeof ChatRoute
-  '/failover': typeof FailoverRoute
-  '/inspector': typeof InspectorRoute
-  '/memory': typeof MemoryRoute
-  '/recurrence': typeof RecurrenceRoute
-  '/settings': typeof SettingsRoute
-  '/incidents/$id': typeof IncidentsIdRoute
-  '/incidents/': typeof IncidentsIndexRoute
+  '/_authed': typeof AuthedRouteWithChildren
+  '/login': typeof LoginRoute
+  '/signup': typeof SignupRoute
+  '/_authed/chat': typeof AuthedChatRoute
+  '/_authed/dashboard': typeof AuthedDashboardRoute
+  '/_authed/failover': typeof AuthedFailoverRoute
+  '/_authed/inspector': typeof AuthedInspectorRoute
+  '/_authed/memory': typeof AuthedMemoryRoute
+  '/_authed/recurrence': typeof AuthedRecurrenceRoute
+  '/_authed/settings': typeof AuthedSettingsRoute
+  '/_authed/incidents/$id': typeof AuthedIncidentsIdRoute
+  '/_authed/incidents/': typeof AuthedIncidentsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/login'
+    | '/signup'
     | '/chat'
+    | '/dashboard'
     | '/failover'
     | '/inspector'
     | '/memory'
@@ -114,7 +150,10 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/login'
+    | '/signup'
     | '/chat'
+    | '/dashboard'
     | '/failover'
     | '/inspector'
     | '/memory'
@@ -125,26 +164,25 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
-    | '/chat'
-    | '/failover'
-    | '/inspector'
-    | '/memory'
-    | '/recurrence'
-    | '/settings'
-    | '/incidents/$id'
-    | '/incidents/'
+    | '/_authed'
+    | '/login'
+    | '/signup'
+    | '/_authed/chat'
+    | '/_authed/dashboard'
+    | '/_authed/failover'
+    | '/_authed/inspector'
+    | '/_authed/memory'
+    | '/_authed/recurrence'
+    | '/_authed/settings'
+    | '/_authed/incidents/$id'
+    | '/_authed/incidents/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  ChatRoute: typeof ChatRoute
-  FailoverRoute: typeof FailoverRoute
-  InspectorRoute: typeof InspectorRoute
-  MemoryRoute: typeof MemoryRoute
-  RecurrenceRoute: typeof RecurrenceRoute
-  SettingsRoute: typeof SettingsRoute
-  IncidentsIdRoute: typeof IncidentsIdRoute
-  IncidentsIndexRoute: typeof IncidentsIndexRoute
+  AuthedRoute: typeof AuthedRouteWithChildren
+  LoginRoute: typeof LoginRoute
+  SignupRoute: typeof SignupRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -156,75 +194,125 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/chat': {
-      id: '/chat'
+    '/_authed': {
+      id: '/_authed'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authed/chat': {
+      id: '/_authed/chat'
       path: '/chat'
       fullPath: '/chat'
-      preLoaderRoute: typeof ChatRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthedChatRouteImport
+      parentRoute: typeof AuthedRoute
     }
-    '/failover': {
-      id: '/failover'
+    '/_authed/dashboard': {
+      id: '/_authed/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthedDashboardRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/failover': {
+      id: '/_authed/failover'
       path: '/failover'
       fullPath: '/failover'
-      preLoaderRoute: typeof FailoverRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthedFailoverRouteImport
+      parentRoute: typeof AuthedRoute
     }
-    '/inspector': {
-      id: '/inspector'
+    '/_authed/inspector': {
+      id: '/_authed/inspector'
       path: '/inspector'
       fullPath: '/inspector'
-      preLoaderRoute: typeof InspectorRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthedInspectorRouteImport
+      parentRoute: typeof AuthedRoute
     }
-    '/memory': {
-      id: '/memory'
+    '/_authed/memory': {
+      id: '/_authed/memory'
       path: '/memory'
       fullPath: '/memory'
-      preLoaderRoute: typeof MemoryRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthedMemoryRouteImport
+      parentRoute: typeof AuthedRoute
     }
-    '/recurrence': {
-      id: '/recurrence'
+    '/_authed/recurrence': {
+      id: '/_authed/recurrence'
       path: '/recurrence'
       fullPath: '/recurrence'
-      preLoaderRoute: typeof RecurrenceRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthedRecurrenceRouteImport
+      parentRoute: typeof AuthedRoute
     }
-    '/settings': {
-      id: '/settings'
+    '/_authed/settings': {
+      id: '/_authed/settings'
       path: '/settings'
       fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthedSettingsRouteImport
+      parentRoute: typeof AuthedRoute
     }
-    '/incidents/': {
-      id: '/incidents/'
+    '/_authed/incidents/': {
+      id: '/_authed/incidents/'
       path: '/incidents'
       fullPath: '/incidents/'
-      preLoaderRoute: typeof IncidentsIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthedIncidentsIndexRouteImport
+      parentRoute: typeof AuthedRoute
     }
-    '/incidents/$id': {
-      id: '/incidents/$id'
+    '/_authed/incidents/$id': {
+      id: '/_authed/incidents/$id'
       path: '/incidents/$id'
       fullPath: '/incidents/$id'
-      preLoaderRoute: typeof IncidentsIdRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthedIncidentsIdRouteImport
+      parentRoute: typeof AuthedRoute
     }
   }
 }
 
+interface AuthedRouteChildren {
+  AuthedChatRoute: typeof AuthedChatRoute
+  AuthedDashboardRoute: typeof AuthedDashboardRoute
+  AuthedFailoverRoute: typeof AuthedFailoverRoute
+  AuthedInspectorRoute: typeof AuthedInspectorRoute
+  AuthedMemoryRoute: typeof AuthedMemoryRoute
+  AuthedRecurrenceRoute: typeof AuthedRecurrenceRoute
+  AuthedSettingsRoute: typeof AuthedSettingsRoute
+  AuthedIncidentsIdRoute: typeof AuthedIncidentsIdRoute
+  AuthedIncidentsIndexRoute: typeof AuthedIncidentsIndexRoute
+}
+
+const AuthedRouteChildren: AuthedRouteChildren = {
+  AuthedChatRoute: AuthedChatRoute,
+  AuthedDashboardRoute: AuthedDashboardRoute,
+  AuthedFailoverRoute: AuthedFailoverRoute,
+  AuthedInspectorRoute: AuthedInspectorRoute,
+  AuthedMemoryRoute: AuthedMemoryRoute,
+  AuthedRecurrenceRoute: AuthedRecurrenceRoute,
+  AuthedSettingsRoute: AuthedSettingsRoute,
+  AuthedIncidentsIdRoute: AuthedIncidentsIdRoute,
+  AuthedIncidentsIndexRoute: AuthedIncidentsIndexRoute,
+}
+
+const AuthedRouteWithChildren =
+  AuthedRoute._addFileChildren(AuthedRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  ChatRoute: ChatRoute,
-  FailoverRoute: FailoverRoute,
-  InspectorRoute: InspectorRoute,
-  MemoryRoute: MemoryRoute,
-  RecurrenceRoute: RecurrenceRoute,
-  SettingsRoute: SettingsRoute,
-  IncidentsIdRoute: IncidentsIdRoute,
-  IncidentsIndexRoute: IncidentsIndexRoute,
+  AuthedRoute: AuthedRouteWithChildren,
+  LoginRoute: LoginRoute,
+  SignupRoute: SignupRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

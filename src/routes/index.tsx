@@ -1,234 +1,231 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Activity, ArrowRight, Clock, Database, GitCompare, ServerCog, Sparkle } from "lucide-react";
-import { useState } from "react";
-import { toast } from "sonner";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+  Bell,
+  Brain,
+  Database,
+  Github,
+  PlayCircle,
+  Radar,
+  ServerCog,
+  ShieldCheck,
+  Sparkles,
+  Wrench,
+} from "lucide-react";
 
-import { SeverityBadge, StatusBadge, timeSince } from "@/components/status-bits";
+import { ClusterDiagram } from "@/components/cluster-diagram";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { getClusterStatus } from "@/services/clusterService";
-import { listIncidents } from "@/services/incidentService";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import type { ClusterNode } from "@/services/types";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Dashboard — Roach Watch incident triage" },
+      { title: "Roach Watch — on-call memory that never goes down" },
       {
         name: "description",
         content:
-          "Live incident feed, triage metrics, and MCP-based CockroachDB cluster introspection for the Roach Watch on-call copilot.",
+          "Roach Watch is an AI incident-response copilot that remembers every past outage — and keeps remembering even while its own database is being killed.",
       },
-      { property: "og:title", content: "Dashboard — Roach Watch incident triage" },
+      { property: "og:title", content: "Roach Watch — on-call memory that never goes down" },
       {
         property: "og:description",
-        content: "Live incident feed and read-only cluster introspection via the CockroachDB MCP server.",
+        content:
+          "An AI incident-response copilot with permanent, instantly searchable memory built on CockroachDB.",
       },
     ],
   }),
-  component: Dashboard,
+  component: Landing,
 });
 
-function StatCard({
-  label,
-  value,
-  hint,
-  icon: Icon,
-  tone,
-}: {
-  label: string;
-  value: string;
-  hint: string;
-  icon: typeof Activity;
-  tone?: "primary" | "healthy";
-}) {
+const HERO_NODES: ClusterNode[] = [
+  { id: 1, name: "Node 1", state: "healthy", region: "us-east-1a", latencyMs: 9, replicas: 24 },
+  { id: 2, name: "Node 2", state: "healthy", region: "us-east-1b", latencyMs: 11, replicas: 24 },
+  { id: 3, name: "Node 3", state: "healthy", region: "us-west-2a", latencyMs: 38, replicas: 24 },
+];
+
+const FEATURES = [
+  {
+    icon: Brain,
+    title: "Remembers everything.",
+    body: "Every past incident, its root cause, and its fix — stored permanently, searchable instantly.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Never loses a beat.",
+    body: "Built on CockroachDB's distributed architecture, so the memory survives node failures, not just the app.",
+  },
+  {
+    icon: Radar,
+    title: "Catches problems before they page anyone.",
+    body: "The agent re-checks old fixes against live system state and flags regressions early.",
+  },
+];
+
+const STEPS = [
+  { icon: Bell, label: "Alert comes in" },
+  { icon: Database, label: "Agent searches memory instantly" },
+  { icon: Wrench, label: "Agent proposes root cause & fix" },
+  { icon: Sparkles, label: "Resolution written back — smarter next time" },
+];
+
+const STACK = [
+  { name: "Groq", caption: "reasoning" },
+  { name: "NVIDIA NIM", caption: "embeddings & reranking" },
+  { name: "CockroachDB", caption: "memory that never goes down" },
+  { name: "AWS", caption: "hosting & scheduled jobs" },
+];
+
+function Landing() {
   return (
-    <Card className="panel">
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between">
-          <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">{label}</div>
-          <Icon className={tone === "healthy" ? "h-4 w-4 text-healthy" : "h-4 w-4 text-primary"} />
-        </div>
-        <div className="mt-3 font-mono text-3xl font-semibold tracking-tight">{value}</div>
-        <div className="mt-1 text-xs text-muted-foreground">{hint}</div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function IntrospectionPanel() {
-  const queryClient = useQueryClient();
-  const { data } = useQuery({ queryKey: ["cluster"], queryFn: getClusterStatus });
-  const [inspecting, setInspecting] = useState(false);
-
-  const inspect = async () => {
-    setInspecting(true);
-    // TODO: connect to CockroachDB Cloud Managed MCP Server (read-only mode) for real cluster state
-    await new Promise((r) => setTimeout(r, 1400));
-    await queryClient.invalidateQueries({ queryKey: ["cluster"] });
-    setInspecting(false);
-    toast.success("MCP inspection complete", {
-      description: "Agent verified its memory layer health before triaging.",
-    });
-  };
-
-  const healthy = data?.nodes.filter((n) => n.state === "healthy").length ?? 0;
-
-  return (
-    <Card className="panel">
-      <CardHeader className="flex-row items-start justify-between gap-3 pb-3">
-        <div>
-          <CardTitle className="text-base">Agent Cluster Introspection</CardTitle>
-          <p className="mt-1 font-mono text-[11px] text-muted-foreground">via MCP · read-only</p>
-        </div>
-        <Button size="sm" variant="outline" onClick={inspect} disabled={inspecting}>
-          <ServerCog className="mr-1.5 h-3.5 w-3.5" />
-          {inspecting ? "Agent querying via MCP Server…" : "Ask agent to inspect cluster"}
-        </Button>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <p className="text-sm text-muted-foreground">
-          The agent checked its own memory layer's health before triaging — not generic infra metrics.
-        </p>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {[
-            { k: "Nodes healthy", v: data ? `${healthy}/${data.nodes.length}` : "—" },
-            {
-              k: "Replicas under-replicated",
-              v: data ? String(data.replicasUnderReplicated) : "—",
-            },
-            { k: "Active connections", v: data ? String(data.activeConnections) : "—" },
-            { k: "Last query latency", v: data ? `${data.lastQueryLatencyMs}ms` : "—" },
-          ].map((m) => (
-            <div key={m.k} className="rounded-md border border-border bg-elevated/60 p-3">
-              <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                {m.k}
-              </div>
-              <div
-                className={`mt-1.5 font-mono text-lg ${inspecting ? "animate-pulse text-muted-foreground" : ""}`}
-              >
-                {inspecting ? "···" : m.v}
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="flex items-center justify-between">
-          <Link
-            to="/inspector"
-            className="font-mono text-xs text-primary underline-offset-4 hover:underline"
-          >
-            Open full Cluster Inspector →
-          </Link>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function Dashboard() {
-  const navigate = useNavigate();
-  const { data: incidents, isLoading } = useQuery({ queryKey: ["incidents"], queryFn: listIncidents });
-  const { data: cluster } = useQuery({ queryKey: ["cluster"], queryFn: getClusterStatus });
-
-  const active = incidents?.filter((i) => i.status !== "resolved").length ?? 0;
-  const healthy = cluster?.nodes.filter((n) => n.state === "healthy").length ?? 0;
-
-  const triage = useMutation({
-    mutationFn: async (id: string) => id,
-    onSuccess: (id) => navigate({ to: "/chat", search: { incident: id } }),
-  });
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Incident Dashboard</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          The on-call memory that never goes down — because it can't afford to.
-        </p>
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard
-          label="Active incidents"
-          value={String(active)}
-          hint="Open or investigating right now"
-          icon={Activity}
-        />
-        <StatCard label="Mean time to triage" value="4m 12s" hint="Down 63% since memory came online" icon={Clock} />
-        <StatCard
-          label="Memory records stored"
-          value={cluster ? cluster.memoryRecords.toLocaleString() : "—"}
-          hint="Vector-indexed, immediately queryable"
-          icon={Database}
-        />
-        <StatCard
-          label="Cluster nodes healthy"
-          value={cluster ? `${healthy}/${cluster.nodes.length}` : "—"}
-          hint="CockroachDB roachwatch-prod"
-          icon={Sparkle}
-          tone="healthy"
-        />
-      </div>
-
-      <IntrospectionPanel />
-
-      <Card className="panel">
-        <CardHeader className="flex-row items-center justify-between pb-3">
-          <div className="flex items-center gap-2">
-            <span className="pulse-ring h-2 w-2 rounded-full bg-primary text-primary" />
-            <CardTitle className="text-base">Live incident feed</CardTitle>
+    <div className="min-h-screen bg-background text-foreground">
+      <header className="sticky top-0 z-30 border-b border-border bg-background/85 backdrop-blur">
+        <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4">
+          <span className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/15 text-primary">
+            <ServerCog className="h-4 w-4" />
+          </span>
+          <span className="text-sm font-semibold tracking-tight">Roach Watch</span>
+          <span className="hidden font-mono text-[10px] uppercase tracking-widest text-muted-foreground sm:inline">
+            on-call memory
+          </span>
+          <div className="ml-auto flex items-center gap-2">
+            <Button asChild variant="ghost" size="sm">
+              <Link to="/login">Log in</Link>
+            </Button>
+            <Button asChild size="sm">
+              <Link to="/signup">Get Started</Link>
+            </Button>
           </div>
-          <Link to="/incidents" className="font-mono text-xs text-primary hover:underline">
-            View all
-          </Link>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {/* TODO: replace mock incident feed with CockroachDB query results (real-time incident table) */}
-          {isLoading &&
-            Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 w-full" />)}
-          {incidents?.map((incident) => (
-            <div
-              key={incident.id}
-              className="rounded-lg border border-border bg-elevated/50 p-4 transition-colors hover:border-primary/40"
-            >
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="min-w-0 space-y-2">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <SeverityBadge severity={incident.severity} />
-                    <StatusBadge status={incident.status} />
-                    <Link
-                      to="/incidents/$id"
-                      params={{ id: incident.id }}
-                      className="font-mono text-sm text-primary hover:underline"
-                    >
-                      {incident.service}
-                    </Link>
-                    <span className="font-mono text-[11px] text-muted-foreground">
-                      {incident.id} · {timeSince(incident.triggeredAt)}
+        </div>
+      </header>
+
+      <main>
+        {/* Hero */}
+        <section className="relative overflow-hidden border-b border-border">
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-[0.14]">
+            <ClusterDiagram nodes={HERO_NODES} className="w-full max-w-3xl border-0 bg-transparent" />
+          </div>
+          <div className="relative mx-auto max-w-4xl px-4 py-24 text-center sm:py-32">
+            <span className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 font-mono text-[11px] uppercase tracking-widest text-primary">
+              <span className="pulse-ring h-1.5 w-1.5 rounded-full bg-primary text-primary" />
+              AI incident-response copilot
+            </span>
+            <h1 className="mt-6 text-balance text-4xl font-semibold tracking-tight sm:text-5xl">
+              The on-call memory that never goes down — because it can't afford to.
+            </h1>
+            <p className="mx-auto mt-5 max-w-2xl text-pretty text-base text-muted-foreground">
+              Roach Watch is an AI incident-response copilot that remembers every past outage — and keeps
+              remembering even while its own database is being killed.
+            </p>
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+              <Button asChild size="lg">
+                <Link to="/signup">Get Started</Link>
+              </Button>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="lg">
+                    <PlayCircle className="mr-1.5 h-4 w-4" />
+                    Watch Demo
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>Roach Watch demo</DialogTitle>
+                    <DialogDescription>
+                      Failover demo walkthrough — kill a node, keep writing, keep remembering.
+                    </DialogDescription>
+                  </DialogHeader>
+                  {/* TODO: replace with the real demo video embed */}
+                  <div className="grid-backdrop flex aspect-video items-center justify-center rounded-lg border border-border bg-elevated/60">
+                    <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+                      demo video embed placeholder
                     </span>
                   </div>
-                  <p className="text-sm text-foreground/90">{incident.summary}</p>
-                  {incident.matchedRecordId && (
-                    <Link
-                      to="/memory"
-                      search={{ q: incident.summary }}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 px-2.5 py-1 font-mono text-[11px] text-primary transition-colors hover:bg-primary/20"
-                    >
-                      <GitCompare className="h-3 w-3" />
-                      Similar past incident found · {incident.matchedRecordId}
-                    </Link>
-                  )}
-                </div>
-                <Button size="sm" onClick={() => triage.mutate(incident.id)}>
-                  Triage with Agent
-                  <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
-                </Button>
-              </div>
+                </DialogContent>
+              </Dialog>
             </div>
-          ))}
-        </CardContent>
-      </Card>
+          </div>
+        </section>
+
+        {/* What it does */}
+        <section className="mx-auto max-w-6xl px-4 py-20">
+          <h2 className="text-center text-2xl font-semibold tracking-tight">What it does</h2>
+          <div className="mt-10 grid gap-5 md:grid-cols-3">
+            {FEATURES.map((f) => (
+              <div key={f.title} className="panel rounded-lg border border-border p-6">
+                <span className="flex h-9 w-9 items-center justify-center rounded-md bg-primary/15 text-primary">
+                  <f.icon className="h-4.5 w-4.5" />
+                </span>
+                <h3 className="mt-4 text-base font-medium">{f.title}</h3>
+                <p className="mt-2 text-sm text-muted-foreground">{f.body}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* How it works */}
+        <section className="border-y border-border bg-elevated/30">
+          <div className="mx-auto max-w-6xl px-4 py-20">
+            <h2 className="text-center text-2xl font-semibold tracking-tight">How it works</h2>
+            <ol className="mt-10 grid gap-4 md:grid-cols-4">
+              {STEPS.map((s, i) => (
+                <li key={s.label} className="relative rounded-lg border border-border bg-background/60 p-5">
+                  <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                    step {String(i + 1).padStart(2, "0")}
+                  </div>
+                  <s.icon className="mt-3 h-5 w-5 text-primary" />
+                  <div className="mt-3 text-sm font-medium">{s.label}</div>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+
+        {/* Built on */}
+        <section className="mx-auto max-w-6xl px-4 py-20">
+          <h2 className="text-center font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
+            Built on
+          </h2>
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {STACK.map((s) => (
+              <div
+                key={s.name}
+                className="rounded-lg border border-border bg-elevated/40 p-5 text-center transition-colors hover:border-primary/40"
+              >
+                <div className="font-mono text-base font-semibold tracking-tight">{s.name}</div>
+                <div className="mt-1 text-xs text-muted-foreground">{s.caption}</div>
+              </div>
+            ))}
+          </div>
+        </section>
+      </main>
+
+      <footer className="border-t border-border">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-3 px-4 py-8 text-xs text-muted-foreground">
+          <span className="font-semibold text-foreground">Roach Watch</span>
+          <a href="#" className="hover:text-primary">
+            Demo video
+          </a>
+          <a
+            href="https://github.com"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1.5 hover:text-primary"
+          >
+            <Github className="h-3.5 w-3.5" />
+            GitHub repo
+          </a>
+          <span className="ml-auto font-mono text-[11px]">
+            Built for the CockroachDB × AWS Hackathon.
+          </span>
+        </div>
+      </footer>
     </div>
   );
 }

@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { searchMemory, writeRecord } from "@/services/memoryService";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/memory")({
+export const Route = createFileRoute("/_authed/memory")({
   validateSearch: (s: Record<string, unknown>) => ({
     q: typeof s["q"] === "string" ? (s["q"] as string) : "",
   }),

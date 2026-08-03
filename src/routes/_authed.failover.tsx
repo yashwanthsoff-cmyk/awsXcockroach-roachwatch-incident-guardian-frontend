@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getClusterStatus, killNode, restoreNode } from "@/services/clusterService";
 
-export const Route = createFileRoute("/failover")({
+export const Route = createFileRoute("/_authed/failover")({
   head: () => ({
     meta: [
       { title: "Failover Demo — Roach Watch" },

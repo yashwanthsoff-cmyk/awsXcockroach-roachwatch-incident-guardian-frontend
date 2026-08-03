@@ -20,7 +20,7 @@ import {
 import { getClusterStatus } from "@/services/clusterService";
 import { listInspections, runInspection } from "@/services/mcpService";
 
-export const Route = createFileRoute("/inspector")({
+export const Route = createFileRoute("/_authed/inspector")({
   head: () => ({
     meta: [
       { title: "Cluster Inspector — Roach Watch" },
