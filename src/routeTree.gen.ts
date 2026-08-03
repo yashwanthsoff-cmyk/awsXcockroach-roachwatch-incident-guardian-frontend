@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as AuthedRouteImport } from './routes/_authed'
 import { Route as AuthedChatRouteImport } from './routes/_authed.chat'
 import { Route as AuthedDashboardRouteImport } from './routes/_authed.dashboard'
 import { Route as AuthedFailoverRouteImport } from './routes/_authed.failover'
@@ -19,53 +20,58 @@ import { Route as AuthedSettingsRouteImport } from './routes/_authed.settings'
 import { Route as AuthedIncidentsIndexRouteImport } from './routes/_authed.incidents.index'
 import { Route as AuthedIncidentsIdRouteImport } from './routes/_authed.incidents.$id'
 
-const AuthedChatRoute = AuthedChatRouteImport.update({
-  id: '/_authed/chat',
-  path: '/chat',
+const AuthedRoute = AuthedRouteImport.update({
+  id: '/_authed',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthedChatRoute = AuthedChatRouteImport.update({
+  id: '/chat',
+  path: '/chat',
+  getParentRoute: () => AuthedRoute,
 } as any)
 const AuthedDashboardRoute = AuthedDashboardRouteImport.update({
-  id: '/_authed/dashboard',
+  id: '/dashboard',
   path: '/dashboard',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthedRoute,
 } as any)
 const AuthedFailoverRoute = AuthedFailoverRouteImport.update({
-  id: '/_authed/failover',
+  id: '/failover',
   path: '/failover',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthedRoute,
 } as any)
 const AuthedInspectorRoute = AuthedInspectorRouteImport.update({
-  id: '/_authed/inspector',
+  id: '/inspector',
   path: '/inspector',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthedRoute,
 } as any)
 const AuthedMemoryRoute = AuthedMemoryRouteImport.update({
-  id: '/_authed/memory',
+  id: '/memory',
   path: '/memory',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthedRoute,
 } as any)
 const AuthedRecurrenceRoute = AuthedRecurrenceRouteImport.update({
-  id: '/_authed/recurrence',
+  id: '/recurrence',
   path: '/recurrence',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthedRoute,
 } as any)
 const AuthedSettingsRoute = AuthedSettingsRouteImport.update({
-  id: '/_authed/settings',
+  id: '/settings',
   path: '/settings',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthedRoute,
 } as any)
 const AuthedIncidentsIndexRoute = AuthedIncidentsIndexRouteImport.update({
-  id: '/_authed/incidents/',
+  id: '/incidents/',
   path: '/incidents/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthedRoute,
 } as any)
 const AuthedIncidentsIdRoute = AuthedIncidentsIdRouteImport.update({
-  id: '/_authed/incidents/$id',
+  id: '/incidents/$id',
   path: '/incidents/$id',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthedRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
+  '/': typeof AuthedRouteWithChildren
   '/chat': typeof AuthedChatRoute
   '/dashboard': typeof AuthedDashboardRoute
   '/failover': typeof AuthedFailoverRoute
@@ -77,6 +83,7 @@ export interface FileRoutesByFullPath {
   '/incidents/': typeof AuthedIncidentsIndexRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof AuthedRouteWithChildren
   '/chat': typeof AuthedChatRoute
   '/dashboard': typeof AuthedDashboardRoute
   '/failover': typeof AuthedFailoverRoute
@@ -89,6 +96,7 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/_authed': typeof AuthedRouteWithChildren
   '/_authed/chat': typeof AuthedChatRoute
   '/_authed/dashboard': typeof AuthedDashboardRoute
   '/_authed/failover': typeof AuthedFailoverRoute
@@ -102,6 +110,7 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/'
     | '/chat'
     | '/dashboard'
     | '/failover'
@@ -113,6 +122,7 @@ export interface FileRouteTypes {
     | '/incidents/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
     | '/chat'
     | '/dashboard'
     | '/failover'
@@ -124,6 +134,7 @@ export interface FileRouteTypes {
     | '/incidents'
   id:
     | '__root__'
+    | '/_authed'
     | '/_authed/chat'
     | '/_authed/dashboard'
     | '/_authed/failover'
@@ -136,6 +147,85 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  AuthedRoute: typeof AuthedRouteWithChildren
+}
+
+declare module '@tanstack/react-router' {
+  interface FileRoutesByPath {
+    '/_authed': {
+      id: '/_authed'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authed/chat': {
+      id: '/_authed/chat'
+      path: '/chat'
+      fullPath: '/chat'
+      preLoaderRoute: typeof AuthedChatRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/dashboard': {
+      id: '/_authed/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthedDashboardRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/failover': {
+      id: '/_authed/failover'
+      path: '/failover'
+      fullPath: '/failover'
+      preLoaderRoute: typeof AuthedFailoverRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/inspector': {
+      id: '/_authed/inspector'
+      path: '/inspector'
+      fullPath: '/inspector'
+      preLoaderRoute: typeof AuthedInspectorRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/memory': {
+      id: '/_authed/memory'
+      path: '/memory'
+      fullPath: '/memory'
+      preLoaderRoute: typeof AuthedMemoryRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/recurrence': {
+      id: '/_authed/recurrence'
+      path: '/recurrence'
+      fullPath: '/recurrence'
+      preLoaderRoute: typeof AuthedRecurrenceRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/settings': {
+      id: '/_authed/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthedSettingsRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/incidents/': {
+      id: '/_authed/incidents/'
+      path: '/incidents'
+      fullPath: '/incidents/'
+      preLoaderRoute: typeof AuthedIncidentsIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/incidents/$id': {
+      id: '/_authed/incidents/$id'
+      path: '/incidents/$id'
+      fullPath: '/incidents/$id'
+      preLoaderRoute: typeof AuthedIncidentsIdRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+  }
+}
+
+interface AuthedRouteChildren {
   AuthedChatRoute: typeof AuthedChatRoute
   AuthedDashboardRoute: typeof AuthedDashboardRoute
   AuthedFailoverRoute: typeof AuthedFailoverRoute
@@ -147,75 +237,7 @@ export interface RootRouteChildren {
   AuthedIncidentsIndexRoute: typeof AuthedIncidentsIndexRoute
 }
 
-declare module '@tanstack/react-router' {
-  interface FileRoutesByPath {
-    '/_authed/chat': {
-      id: '/_authed/chat'
-      path: '/chat'
-      fullPath: '/chat'
-      preLoaderRoute: typeof AuthedChatRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authed/dashboard': {
-      id: '/_authed/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof AuthedDashboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authed/failover': {
-      id: '/_authed/failover'
-      path: '/failover'
-      fullPath: '/failover'
-      preLoaderRoute: typeof AuthedFailoverRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authed/inspector': {
-      id: '/_authed/inspector'
-      path: '/inspector'
-      fullPath: '/inspector'
-      preLoaderRoute: typeof AuthedInspectorRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authed/memory': {
-      id: '/_authed/memory'
-      path: '/memory'
-      fullPath: '/memory'
-      preLoaderRoute: typeof AuthedMemoryRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authed/recurrence': {
-      id: '/_authed/recurrence'
-      path: '/recurrence'
-      fullPath: '/recurrence'
-      preLoaderRoute: typeof AuthedRecurrenceRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authed/settings': {
-      id: '/_authed/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof AuthedSettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authed/incidents/': {
-      id: '/_authed/incidents/'
-      path: '/incidents'
-      fullPath: '/incidents/'
-      preLoaderRoute: typeof AuthedIncidentsIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authed/incidents/$id': {
-      id: '/_authed/incidents/$id'
-      path: '/incidents/$id'
-      fullPath: '/incidents/$id'
-      preLoaderRoute: typeof AuthedIncidentsIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-  }
-}
-
-const rootRouteChildren: RootRouteChildren = {
+const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedChatRoute: AuthedChatRoute,
   AuthedDashboardRoute: AuthedDashboardRoute,
   AuthedFailoverRoute: AuthedFailoverRoute,
@@ -225,6 +247,13 @@ const rootRouteChildren: RootRouteChildren = {
   AuthedSettingsRoute: AuthedSettingsRoute,
   AuthedIncidentsIdRoute: AuthedIncidentsIdRoute,
   AuthedIncidentsIndexRoute: AuthedIncidentsIndexRoute,
+}
+
+const AuthedRouteWithChildren =
+  AuthedRoute._addFileChildren(AuthedRouteChildren)
+
+const rootRouteChildren: RootRouteChildren = {
+  AuthedRoute: AuthedRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
