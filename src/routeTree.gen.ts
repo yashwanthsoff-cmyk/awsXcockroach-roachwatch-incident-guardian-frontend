@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthedRouteImport } from './routes/_authed'
 import { Route as AuthedChatRouteImport } from './routes/_authed.chat'
 import { Route as AuthedDashboardRouteImport } from './routes/_authed.dashboard'
@@ -20,6 +21,11 @@ import { Route as AuthedSettingsRouteImport } from './routes/_authed.settings'
 import { Route as AuthedIncidentsIndexRouteImport } from './routes/_authed.incidents.index'
 import { Route as AuthedIncidentsIdRouteImport } from './routes/_authed.incidents.$id'
 
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthedRoute = AuthedRouteImport.update({
   id: '/_authed',
   getParentRoute: () => rootRouteImport,
@@ -71,7 +77,7 @@ const AuthedIncidentsIdRoute = AuthedIncidentsIdRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof AuthedRouteWithChildren
+  '/': typeof IndexRoute
   '/chat': typeof AuthedChatRoute
   '/dashboard': typeof AuthedDashboardRoute
   '/failover': typeof AuthedFailoverRoute
@@ -83,7 +89,7 @@ export interface FileRoutesByFullPath {
   '/incidents/': typeof AuthedIncidentsIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof AuthedRouteWithChildren
+  '/': typeof IndexRoute
   '/chat': typeof AuthedChatRoute
   '/dashboard': typeof AuthedDashboardRoute
   '/failover': typeof AuthedFailoverRoute
@@ -96,6 +102,7 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
   '/_authed': typeof AuthedRouteWithChildren
   '/_authed/chat': typeof AuthedChatRoute
   '/_authed/dashboard': typeof AuthedDashboardRoute
@@ -134,6 +141,7 @@ export interface FileRouteTypes {
     | '/incidents'
   id:
     | '__root__'
+    | '/'
     | '/_authed'
     | '/_authed/chat'
     | '/_authed/dashboard'
@@ -147,11 +155,19 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
   AuthedRoute: typeof AuthedRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authed': {
       id: '/_authed'
       path: ''
@@ -253,6 +269,7 @@ const AuthedRouteWithChildren =
   AuthedRoute._addFileChildren(AuthedRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
   AuthedRoute: AuthedRouteWithChildren,
 }
 export const routeTree = rootRouteImport
