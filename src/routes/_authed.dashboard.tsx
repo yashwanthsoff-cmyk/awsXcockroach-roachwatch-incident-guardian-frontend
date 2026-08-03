@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { getClusterStatus } from "@/services/clusterService";
 import { listIncidents } from "@/services/incidentService";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/_authed/dashboard")({
   head: () => ({
     meta: [
       { title: "Dashboard — Roach Watch incident triage" },

@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { getIncident } from "@/services/incidentService";
 import { getRecord, writeRecord } from "@/services/memoryService";
 
-export const Route = createFileRoute("/incidents/$id")({
+export const Route = createFileRoute("/_authed/incidents/$id")({
   head: () => ({
     meta: [
       { title: "Incident detail — Roach Watch" },

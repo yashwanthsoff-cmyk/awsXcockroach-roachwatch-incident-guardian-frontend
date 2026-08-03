@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { listIncidents } from "@/services/incidentService";
 
-export const Route = createFileRoute("/incidents/")({
+export const Route = createFileRoute("/_authed/incidents/")({
   head: () => ({
     meta: [
       { title: "Incidents — Roach Watch" },

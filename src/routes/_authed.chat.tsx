@@ -12,7 +12,7 @@ import { listIncidents } from "@/services/incidentService";
 import type { MemoryRecord } from "@/services/types";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/chat")({
+export const Route = createFileRoute("/_authed/chat")({
   validateSearch: (s: Record<string, unknown>) => ({
     incident: typeof s["incident"] === "string" ? (s["incident"] as string) : "",
   }),

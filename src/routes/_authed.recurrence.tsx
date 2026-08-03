@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { checkAll, checkOne, listWatched } from "@/services/recurrenceService";
 
-export const Route = createFileRoute("/recurrence")({
+export const Route = createFileRoute("/_authed/recurrence")({
   head: () => ({
     meta: [
       { title: "Recurrence Watch — Roach Watch" },

@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { checkAllHealth, checkHealth } from "@/services/toolStatusService";
 import type { ToolHealth, ToolName } from "@/services/types";
 
-export const Route = createFileRoute("/settings")({
+export const Route = createFileRoute("/_authed/settings")({
   head: () => ({
     meta: [
       { title: "Settings & Tools — Roach Watch" },
