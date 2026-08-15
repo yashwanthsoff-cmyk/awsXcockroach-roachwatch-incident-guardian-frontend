@@ -1,29 +1,25 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+﻿import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Activity, ArrowRight, Clock, Database, GitCompare, ServerCog, Sparkle } from "lucide-react";
-import { useState } from "react";
+import { Activity, ArrowRight, CheckCircle2, Database, GitCompare, Globe, Radio, ServerCog, Webhook } from "lucide-react";
 import { toast } from "sonner";
 
 import { SeverityBadge, StatusBadge, timeSince } from "@/components/status-bits";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getClusterStatus } from "@/services/clusterService";
 import { listIncidents } from "@/services/incidentService";
+import { getStats } from "@/services/statsService";
+import { getClusterInfo } from "@/services/clusterInfoService";
+import { simulateAlert, type SimulatedAlertKind } from "@/services/webhookService";
 
 export const Route = createFileRoute("/_authed/dashboard")({
   head: () => ({
     meta: [
-      { title: "Dashboard — Roach Watch incident triage" },
+      { title: "Dashboard - Roach Watch" },
       {
         name: "description",
         content:
-          "Live incident feed, triage metrics, and MCP-based CockroachDB cluster introspection for the Roach Watch on-call copilot.",
-      },
-      { property: "og:title", content: "Dashboard — Roach Watch incident triage" },
-      {
-        property: "og:description",
-        content: "Live incident feed and read-only cluster introspection via the CockroachDB MCP server.",
+          "Live incident feed and real triage metrics for the Roach Watch on-call copilot, backed by CockroachDB.",
       },
     ],
   }),
@@ -57,70 +53,104 @@ function StatCard({
   );
 }
 
-function IntrospectionPanel() {
-  const queryClient = useQueryClient();
-  const { data } = useQuery({ queryKey: ["cluster"], queryFn: getClusterStatus });
-  const [inspecting, setInspecting] = useState(false);
-
-  const inspect = async () => {
-    setInspecting(true);
-    // TODO: connect to CockroachDB Cloud Managed MCP Server (read-only mode) for real cluster state
-    await new Promise((r) => setTimeout(r, 1400));
-    await queryClient.invalidateQueries({ queryKey: ["cluster"] });
-    setInspecting(false);
-    toast.success("MCP inspection complete", {
-      description: "Agent verified its memory layer health before triaging.",
-    });
-  };
-
-  const healthy = data?.nodes.filter((n) => n.state === "healthy").length ?? 0;
+function ClusterInfoPanel() {
+  const { data: cluster, isLoading } = useQuery({ queryKey: ["cluster-info"], queryFn: getClusterInfo });
 
   return (
     <Card className="panel">
       <CardHeader className="flex-row items-start justify-between gap-3 pb-3">
         <div>
-          <CardTitle className="text-base">Agent Cluster Introspection</CardTitle>
-          <p className="mt-1 font-mono text-[11px] text-muted-foreground">via MCP · read-only</p>
+          <CardTitle className="text-base">Cluster Introspection</CardTitle>
+          <p className="mt-1 font-mono text-[11px] text-muted-foreground">via CockroachDB Managed MCP Server</p>
         </div>
-        <Button size="sm" variant="outline" onClick={inspect} disabled={inspecting}>
-          <ServerCog className="mr-1.5 h-3.5 w-3.5" />
-          {inspecting ? "Agent querying via MCP Server…" : "Ask agent to inspect cluster"}
-        </Button>
+        <ServerCog className="h-4 w-4 text-primary" />
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-sm text-muted-foreground">
-          The agent checked its own memory layer's health before triaging — not generic infra metrics.
+          Every field below comes from a live MCP call against the real cluster - not simulated. CockroachDB
+          Serverless does not report per-node health on this plan, so no node count is shown here.
         </p>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {[
-            { k: "Nodes healthy", v: data ? `${healthy}/${data.nodes.length}` : "—" },
-            {
-              k: "Replicas under-replicated",
-              v: data ? String(data.replicasUnderReplicated) : "—",
-            },
-            { k: "Active connections", v: data ? String(data.activeConnections) : "—" },
-            { k: "Last query latency", v: data ? `${data.lastQueryLatencyMs}ms` : "—" },
-          ].map((m) => (
-            <div key={m.k} className="rounded-md border border-border bg-elevated/60 p-3">
-              <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                {m.k}
+        {isLoading && <Skeleton className="h-24 w-full" />}
+        {cluster && (
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {[
+              { k: "Cluster", v: cluster.name },
+              { k: "Version", v: cluster.version },
+              { k: "Region", v: cluster.region },
+              { k: "Availability zones", v: String(cluster.zoneCount) },
+            ].map((m) => (
+              <div key={m.k} className="rounded-md border border-border bg-elevated/60 p-3">
+                <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">{m.k}</div>
+                <div className="mt-1.5 font-mono text-lg">{m.v}</div>
               </div>
-              <div
-                className={`mt-1.5 font-mono text-lg ${inspecting ? "animate-pulse text-muted-foreground" : ""}`}
+            ))}
+          </div>
+        )}
+        {cluster && (
+          <div className="flex flex-wrap gap-1.5">
+            {cluster.zones.map((z) => (
+              <span
+                key={z}
+                className="rounded border border-border bg-elevated px-2 py-0.5 font-mono text-[10px] text-muted-foreground"
               >
-                {inspecting ? "···" : m.v}
-              </div>
-            </div>
-          ))}
+                <Globe className="mr-1 inline h-2.5 w-2.5" />
+                {z}
+              </span>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+const SIMULATE_OPTIONS: { kind: SimulatedAlertKind; label: string }[] = [
+  { kind: "datadog", label: "Simulate Datadog Alert" },
+  { kind: "pagerduty", label: "Simulate PagerDuty Alert" },
+  { kind: "cloudwatch", label: "Simulate CloudWatch Alarm" },
+];
+
+function SimulateAlertPanel() {
+  const navigate = useNavigate();
+
+  const simulate = useMutation({
+    mutationFn: (kind: SimulatedAlertKind) => simulateAlert(kind),
+    onSuccess: (result) => {
+      toast.success(`Incident created from simulated ${result.simulatedKind} alert`, {
+        description: `${result.incident.service} - status: ${result.incident.status.replace("_", " ")}`,
+      });
+      navigate({ to: "/incidents/$id", params: { id: result.incident.id } });
+    },
+    onError: (err) => {
+      toast.error("Simulated alert failed", { description: err instanceof Error ? err.message : "Unknown error" });
+    },
+  });
+
+  return (
+    <Card className="panel border-primary/30">
+      <CardHeader className="flex-row items-start gap-3 pb-3">
+        <Webhook className="mt-0.5 h-4 w-4 text-primary" />
+        <div>
+          <CardTitle className="text-base">Simulate External Alert</CardTitle>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Sends a realistic sample payload through the real webhook normalization + ingestion pipeline - the
+            same path a live Datadog, PagerDuty, or CloudWatch integration would use.
+          </p>
         </div>
-        <div className="flex items-center justify-between">
-          <Link
-            to="/inspector"
-            className="font-mono text-xs text-primary underline-offset-4 hover:underline"
+      </CardHeader>
+      <CardContent className="flex flex-wrap gap-2">
+        {SIMULATE_OPTIONS.map((opt) => (
+          <Button
+            key={opt.kind}
+            size="sm"
+            variant="outline"
+            onClick={() => simulate.mutate(opt.kind)}
+            disabled={simulate.isPending}
           >
-            Open full Cluster Inspector →
-          </Link>
-        </div>
+            <Radio className="mr-1.5 h-3.5 w-3.5" />
+            {simulate.isPending && simulate.variables === opt.kind ? "Sending..." : opt.label}
+          </Button>
+        ))}
       </CardContent>
     </Card>
   );
@@ -129,10 +159,7 @@ function IntrospectionPanel() {
 function Dashboard() {
   const navigate = useNavigate();
   const { data: incidents, isLoading } = useQuery({ queryKey: ["incidents"], queryFn: listIncidents });
-  const { data: cluster } = useQuery({ queryKey: ["cluster"], queryFn: getClusterStatus });
-
-  const active = incidents?.filter((i) => i.status !== "resolved").length ?? 0;
-  const healthy = cluster?.nodes.filter((n) => n.state === "healthy").length ?? 0;
+  const { data: stats } = useQuery({ queryKey: ["stats"], queryFn: getStats });
 
   const triage = useMutation({
     mutationFn: async (id: string) => id,
@@ -144,34 +171,42 @@ function Dashboard() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Incident Dashboard</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          The on-call memory that never goes down — because it can't afford to.
+          The on-call memory that never goes down - because it can't afford to.
         </p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label="Active incidents"
-          value={String(active)}
-          hint="Open or investigating right now"
+          value={stats ? String(stats.activeIncidents) : "-"}
+          hint="Open, investigating, or fix proposed"
           icon={Activity}
         />
-        <StatCard label="Mean time to triage" value="4m 12s" hint="Down 63% since memory came online" icon={Clock} />
         <StatCard
-          label="Memory records stored"
-          value={cluster ? cluster.memoryRecords.toLocaleString() : "—"}
-          hint="Vector-indexed, immediately queryable"
+          label="Resolved incidents"
+          value={stats ? String(stats.resolvedIncidents) : "-"}
+          hint="Closed out, watched for recurrence"
+          icon={CheckCircle2}
+          tone="healthy"
+        />
+        <StatCard
+          label="Analyzed by agent"
+          value={stats ? String(stats.analyzedIncidents) : "-"}
+          hint={stats ? `of ${stats.totalIncidents} total incidents` : "Root cause + fix generated"}
           icon={Database}
         />
         <StatCard
-          label="Cluster nodes healthy"
-          value={cluster ? `${healthy}/${cluster.nodes.length}` : "—"}
-          hint="CockroachDB roachwatch-prod"
-          icon={Sparkle}
+          label="Total incidents"
+          value={stats ? String(stats.totalIncidents) : "-"}
+          hint="All-time, this cluster"
+          icon={ServerCog}
           tone="healthy"
         />
       </div>
 
-      <IntrospectionPanel />
+      <ClusterInfoPanel />
+
+      <SimulateAlertPanel />
 
       <Card className="panel">
         <CardHeader className="flex-row items-center justify-between pb-3">
@@ -184,10 +219,9 @@ function Dashboard() {
           </Link>
         </CardHeader>
         <CardContent className="space-y-3">
-          {/* TODO: replace mock incident feed with CockroachDB query results (real-time incident table) */}
           {isLoading &&
             Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 w-full" />)}
-          {incidents?.map((incident) => (
+          {incidents?.slice(0, 8).map((incident) => (
             <div
               key={incident.id}
               className="rounded-lg border border-border bg-elevated/50 p-4 transition-colors hover:border-primary/40"
@@ -205,7 +239,7 @@ function Dashboard() {
                       {incident.service}
                     </Link>
                     <span className="font-mono text-[11px] text-muted-foreground">
-                      {incident.id} · {timeSince(incident.triggeredAt)}
+                      {incident.id} - {timeSince(incident.triggeredAt)}
                     </span>
                   </div>
                   <p className="text-sm text-foreground/90">{incident.summary}</p>
@@ -216,7 +250,7 @@ function Dashboard() {
                       className="inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 px-2.5 py-1 font-mono text-[11px] text-primary transition-colors hover:bg-primary/20"
                     >
                       <GitCompare className="h-3 w-3" />
-                      Similar past incident found · {incident.matchedRecordId}
+                      Similar past incident found - {incident.matchedRecordId}
                     </Link>
                   )}
                 </div>

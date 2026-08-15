@@ -1,5 +1,5 @@
-export type Severity = "critical" | "high" | "medium" | "low";
-export type IncidentStatus = "open" | "investigating" | "resolved";
+﻿export type Severity = "critical" | "high" | "medium" | "low";
+export type IncidentStatus = "open" | "investigating" | "fix_proposed" | "resolved" | "monitoring";
 export type RiskLevel = "low" | "medium" | "high";
 export type HealthState = "healthy" | "degraded" | "down";
 
@@ -17,6 +17,7 @@ export interface Incident {
   fixSummary?: string;
   recurrenceRisk?: RiskLevel;
   postmortemDraft?: string;
+  markdownResponse?: string;
 }
 
 export interface MemoryRecord {
@@ -37,10 +38,37 @@ export interface MemorySearchResult {
   committedLatencyMs: number;
 }
 
+export interface TraceStep {
+  time: string;
+  step: string;
+  tool: string;
+  durationMs: number;
+  ok: boolean;
+  error?: string;
+}
+
+export interface CitedRecord {
+  id: string;
+  text: string;
+  root_cause: string | null;
+  fix_summary: string | null;
+  created_at: string;
+  score: number;
+}
+
+export interface Evidence {
+  similarIncidentsFound: number;
+  confirmedFixCount: number;
+  avgEffectiveness: number | null;
+}
+
 export interface AgentReply {
   text: string;
-  citedRecords: MemoryRecord[];
+  citedRecords: CitedRecord[];
+  evidence: Evidence;
   toolsUsed: string[];
+  trace: TraceStep[];
+  totalDurationMs: number;
 }
 
 export interface ClusterNode {
@@ -86,3 +114,4 @@ export interface ToolHealth {
 
 export const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 export const randomDelay = () => delay(150 + Math.round(Math.random() * 250));
+

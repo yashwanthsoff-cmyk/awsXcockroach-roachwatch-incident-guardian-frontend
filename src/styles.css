@@ -1,11 +1,12 @@
-@import "tailwindcss" source(none);
+﻿@import "tailwindcss" source(none);
+@plugin "@tailwindcss/typography";
 @source "../src";
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Roach Watch design system — dark-mode-first observability aesthetic.
+ * Roach Watch design system â€” dark-mode-first observability aesthetic.
  * Deep charcoal surfaces, single amber accent for live/alert states,
  * JetBrains Mono for IDs/timestamps/logs, Inter for everything else.
  */
@@ -208,3 +209,4 @@
     linear-gradient(to bottom, oklch(1 0 0 / 4%) 1px, transparent 1px);
   background-size: 32px 32px;
 }
+

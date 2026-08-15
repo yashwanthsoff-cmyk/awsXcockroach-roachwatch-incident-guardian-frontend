@@ -1,6 +1,7 @@
-import { useQuery } from "@tanstack/react-query";
+﻿import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { BrainCircuit, MessageSquare, Save } from "lucide-react";
+import { BrainCircuit, CheckCircle2, MessageSquare, Save } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -9,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
-import { getIncident } from "@/services/incidentService";
+import { getIncident, resolveIncident } from "@/services/incidentService";
 import { getRecord, writeRecord } from "@/services/memoryService";
 
 export const Route = createFileRoute("/_authed/incidents/$id")({
@@ -29,6 +30,7 @@ export const Route = createFileRoute("/_authed/incidents/$id")({
 
 function IncidentDetail() {
   const { id } = Route.useParams();
+  const queryClient = useQueryClient();
   const { data: incident, isLoading } = useQuery({
     queryKey: ["incident", id],
     queryFn: () => getIncident(id),
@@ -41,6 +43,27 @@ function IncidentDetail() {
 
   const [draft, setDraft] = useState("");
   const [saving, setSaving] = useState(false);
+
+  const resolve = useMutation({
+    mutationFn: () => resolveIncident(id),
+    onSuccess: (result) => {
+      if (result.irregularTransition) {
+        toast.warning("Marked resolved (unusual prior status)", {
+          description: `Moved from "${result.previousStatus.replace("_", " ")}" instead of "fix proposed" - still recorded.`,
+        });
+      } else {
+        toast.success("Incident marked resolved", {
+          description: "Now watched by Recurrence Watch - confirming the fix will move it to monitoring.",
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: ["incident", id] });
+      queryClient.invalidateQueries({ queryKey: ["incidents"] });
+      queryClient.invalidateQueries({ queryKey: ["stats"] });
+    },
+    onError: (err) => {
+      toast.error("Could not resolve incident", { description: err instanceof Error ? err.message : "Unknown error" });
+    },
+  });
 
   useEffect(() => {
     if (incident) {
@@ -61,8 +84,8 @@ function IncidentDetail() {
       resolution: draft.slice(0, 240),
     });
     setSaving(false);
-    toast.success(`Committed to memory as record #${record.recordNumber}`, {
-      description: `Write committed in ${record.committedLatencyMs}ms — immediately queryable.`,
+    toast.success("Committed to memory", {
+      description: `Record ${record.id.slice(0, 8)}... — immediately queryable.`,
     });
   };
 
@@ -83,12 +106,20 @@ function IncidentDetail() {
             {incident.summary} · triggered {timeSince(incident.triggeredAt)}
           </p>
         </div>
-        <Button asChild>
-          <Link to="/chat" search={{ incident: incident.id }}>
-            <MessageSquare className="mr-1.5 h-4 w-4" />
-            Triage with Agent
-          </Link>
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          {incident.status === "fix_proposed" && (
+            <Button variant="outline" onClick={() => resolve.mutate()} disabled={resolve.isPending}>
+              <CheckCircle2 className="mr-1.5 h-4 w-4" />
+              {resolve.isPending ? "Resolving..." : "Mark Resolved"}
+            </Button>
+          )}
+          <Button asChild>
+            <Link to="/chat" search={{ incident: incident.id }}>
+              <MessageSquare className="mr-1.5 h-4 w-4" />
+              Triage with Agent
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -109,16 +140,20 @@ function IncidentDetail() {
             <CardTitle className="text-base">Agent Analysis</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* TODO: root cause + confidence score come from Groq API reasoning call; similar-incident
-                match comes from NVIDIA NIM embedding + reranker pipeline over CockroachDB vector index */}
-            <div>
-              <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                Proposed root cause
+            {incident.markdownResponse ? (
+              <div className="prose prose-sm prose-invert max-w-none text-sm leading-relaxed text-foreground/90 prose-headings:mt-3 prose-headings:mb-1.5 prose-headings:text-sm prose-headings:font-semibold prose-headings:text-foreground prose-p:my-1.5 prose-ul:my-1.5 prose-li:my-0.5 prose-strong:text-foreground prose-code:rounded prose-code:bg-elevated prose-code:px-1 prose-code:py-0.5 prose-code:text-xs prose-pre:bg-elevated prose-pre:border prose-pre:border-border">
+                <ReactMarkdown>{incident.markdownResponse}</ReactMarkdown>
               </div>
-              <p className="mt-1.5 text-sm text-foreground/90">
-                {incident.rootCause ?? "Agent has not analysed this incident yet."}
-              </p>
-            </div>
+            ) : (
+              <div>
+                <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                  Proposed root cause
+                </div>
+                <p className="mt-1.5 text-sm text-foreground/90">
+                  {incident.rootCause ?? "Agent has not analysed this incident yet."}
+                </p>
+              </div>
+            )}
             {incident.confidence !== undefined && (
               <div className="flex items-center gap-3 rounded-md border border-primary/30 bg-primary/10 px-3 py-2">
                 <span className="font-mono text-2xl text-primary">{incident.confidence}%</span>

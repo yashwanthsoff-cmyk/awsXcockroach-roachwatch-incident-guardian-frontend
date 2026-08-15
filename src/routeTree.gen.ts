@@ -15,7 +15,6 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as AuthedChatRouteImport } from './routes/_authed.chat'
 import { Route as AuthedDashboardRouteImport } from './routes/_authed.dashboard'
-import { Route as AuthedFailoverRouteImport } from './routes/_authed.failover'
 import { Route as AuthedInspectorRouteImport } from './routes/_authed.inspector'
 import { Route as AuthedMemoryRouteImport } from './routes/_authed.memory'
 import { Route as AuthedRecurrenceRouteImport } from './routes/_authed.recurrence'
@@ -50,11 +49,6 @@ const AuthedChatRoute = AuthedChatRouteImport.update({
 const AuthedDashboardRoute = AuthedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
-  getParentRoute: () => AuthedRoute,
-} as any)
-const AuthedFailoverRoute = AuthedFailoverRouteImport.update({
-  id: '/failover',
-  path: '/failover',
   getParentRoute: () => AuthedRoute,
 } as any)
 const AuthedInspectorRoute = AuthedInspectorRouteImport.update({
@@ -94,7 +88,6 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/chat': typeof AuthedChatRoute
   '/dashboard': typeof AuthedDashboardRoute
-  '/failover': typeof AuthedFailoverRoute
   '/inspector': typeof AuthedInspectorRoute
   '/memory': typeof AuthedMemoryRoute
   '/recurrence': typeof AuthedRecurrenceRoute
@@ -108,7 +101,6 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/chat': typeof AuthedChatRoute
   '/dashboard': typeof AuthedDashboardRoute
-  '/failover': typeof AuthedFailoverRoute
   '/inspector': typeof AuthedInspectorRoute
   '/memory': typeof AuthedMemoryRoute
   '/recurrence': typeof AuthedRecurrenceRoute
@@ -124,7 +116,6 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/_authed/chat': typeof AuthedChatRoute
   '/_authed/dashboard': typeof AuthedDashboardRoute
-  '/_authed/failover': typeof AuthedFailoverRoute
   '/_authed/inspector': typeof AuthedInspectorRoute
   '/_authed/memory': typeof AuthedMemoryRoute
   '/_authed/recurrence': typeof AuthedRecurrenceRoute
@@ -140,7 +131,6 @@ export interface FileRouteTypes {
     | '/signup'
     | '/chat'
     | '/dashboard'
-    | '/failover'
     | '/inspector'
     | '/memory'
     | '/recurrence'
@@ -154,7 +144,6 @@ export interface FileRouteTypes {
     | '/signup'
     | '/chat'
     | '/dashboard'
-    | '/failover'
     | '/inspector'
     | '/memory'
     | '/recurrence'
@@ -169,7 +158,6 @@ export interface FileRouteTypes {
     | '/signup'
     | '/_authed/chat'
     | '/_authed/dashboard'
-    | '/_authed/failover'
     | '/_authed/inspector'
     | '/_authed/memory'
     | '/_authed/recurrence'
@@ -229,13 +217,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedDashboardRouteImport
       parentRoute: typeof AuthedRoute
     }
-    '/_authed/failover': {
-      id: '/_authed/failover'
-      path: '/failover'
-      fullPath: '/failover'
-      preLoaderRoute: typeof AuthedFailoverRouteImport
-      parentRoute: typeof AuthedRoute
-    }
     '/_authed/inspector': {
       id: '/_authed/inspector'
       path: '/inspector'
@@ -284,7 +265,6 @@ declare module '@tanstack/react-router' {
 interface AuthedRouteChildren {
   AuthedChatRoute: typeof AuthedChatRoute
   AuthedDashboardRoute: typeof AuthedDashboardRoute
-  AuthedFailoverRoute: typeof AuthedFailoverRoute
   AuthedInspectorRoute: typeof AuthedInspectorRoute
   AuthedMemoryRoute: typeof AuthedMemoryRoute
   AuthedRecurrenceRoute: typeof AuthedRecurrenceRoute
@@ -296,7 +276,6 @@ interface AuthedRouteChildren {
 const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedChatRoute: AuthedChatRoute,
   AuthedDashboardRoute: AuthedDashboardRoute,
-  AuthedFailoverRoute: AuthedFailoverRoute,
   AuthedInspectorRoute: AuthedInspectorRoute,
   AuthedMemoryRoute: AuthedMemoryRoute,
   AuthedRecurrenceRoute: AuthedRecurrenceRoute,
@@ -317,3 +296,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

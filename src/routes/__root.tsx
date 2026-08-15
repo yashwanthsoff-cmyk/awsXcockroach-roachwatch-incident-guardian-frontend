@@ -81,7 +81,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "description",
         content:
-          "Roach Watch is the on-call memory that never goes down: incident triage, provenance-stamped memory retrieval, and live cluster failover.",
+          "Roach Watch is the on-call memory that never goes down: incident triage, provenance-stamped memory retrieval, and read-only cluster introspection via MCP.",
       },
       { property: "og:title", content: "Roach Watch — AI incident-response copilot" },
       {

@@ -138,7 +138,7 @@ function Landing() {
                   <DialogHeader>
                     <DialogTitle>Roach Watch demo</DialogTitle>
                     <DialogDescription>
-                      Failover demo walkthrough — kill a node, keep writing, keep remembering.
+                      Product walkthrough - real incident triage, memory retrieval, and MCP-based cluster introspection.
                     </DialogDescription>
                   </DialogHeader>
                   {/* TODO: replace with the real demo video embed */}

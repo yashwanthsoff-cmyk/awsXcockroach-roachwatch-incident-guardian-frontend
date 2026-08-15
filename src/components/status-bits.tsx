@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+﻿import { Link } from "@tanstack/react-router";
 import { FileText } from "lucide-react";
 
 import type { MemoryRecord, RiskLevel, Severity } from "@/services/types";
@@ -24,16 +24,19 @@ export function SeverityBadge({ severity }: { severity: Severity }) {
   );
 }
 
+const statusClass: Record<string, string> = {
+  resolved: "border-healthy/40 bg-healthy/15 text-healthy",
+  monitoring: "border-primary/40 bg-primary/15 text-primary",
+  fix_proposed: "border-degraded/40 bg-degraded/15 text-degraded",
+  investigating: "border-degraded/40 bg-degraded/15 text-degraded",
+  open: "border-critical/40 bg-critical/15 text-critical",
+};
+
 export function StatusBadge({ status }: { status: string }) {
-  const tone =
-    status === "resolved"
-      ? "border-healthy/40 bg-healthy/15 text-healthy"
-      : status === "investigating"
-        ? "border-degraded/40 bg-degraded/15 text-degraded"
-        : "border-critical/40 bg-critical/15 text-critical";
+  const tone = statusClass[status] ?? "border-critical/40 bg-critical/15 text-critical";
   return (
     <span className={cn("rounded border px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider", tone)}>
-      {status}
+      {status.replace("_", " ")}
     </span>
   );
 }

@@ -28,7 +28,6 @@ const items = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Incidents", url: "/incidents", icon: Bug },
   { title: "Memory Explorer", url: "/memory", icon: Database },
-  { title: "Failover Demo", url: "/failover", icon: Zap },
   { title: "Cluster Inspector", url: "/inspector", icon: Server },
   { title: "Recurrence Watch", url: "/recurrence", icon: Repeat },
   { title: "Agent Chat", url: "/chat", icon: MessageSquare },

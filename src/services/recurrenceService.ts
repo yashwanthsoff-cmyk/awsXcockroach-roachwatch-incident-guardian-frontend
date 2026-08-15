@@ -1,9 +1,5 @@
-import { listIncidents } from "./incidentService";
-import type { Incident, RiskLevel } from "./types";
-import { delay, randomDelay } from "./types";
-
-// Flip to false once the scheduled AWS Lambda recurrence job is live.
-const DEMO_MODE = true;
+﻿import type { RiskLevel } from "./types";
+import { apiFetch } from "./apiClient";
 
 export interface WatchedResolution {
   incidentId: string;
@@ -15,77 +11,58 @@ export interface WatchedResolution {
   lastCheckedAt: string;
   signal: string;
   regression: boolean;
+  confidencePct: number | null;
+  daysSinceResolution: number | null;
+  effectivenessDowngraded: boolean;
+  matchedIncidentText: string | null;
 }
 
-let overrides: Record<string, { risk: RiskLevel; signal: string; lastCheckedAt: string }> = {};
+interface BackendWatchItem {
+  id: string;
+  service: string;
+  description: string;
+  root_cause?: string | null;
+  fix_summary?: string | null;
+  riskLevel: RiskLevel;
+  matchedIncident?: { id: string; text: string; score: number } | null;
+  explanation?: string;
+  recurrenceConfidence?: number | null;
+  daysSinceResolution?: number | null;
+  effectivenessDowngraded?: boolean;
+}
 
-const SIGNALS: Record<RiskLevel, string> = {
-  low: "Current metrics diverge from pre-fix state by 84% — fix is holding.",
-  medium: "Two of five pre-fix indicators are trending back toward failure thresholds.",
-  high: "Live state now matches 91% of the pre-fix signature — regression likely.",
-};
+interface WatchListResponse {
+  watchList: BackendWatchItem[];
+}
 
-const toWatched = (incident: Incident): WatchedResolution => {
-  const override = overrides[incident.id];
-  const risk = override?.risk ?? incident.recurrenceRisk ?? "low";
+function adaptWatchItem(item: BackendWatchItem): WatchedResolution {
   return {
-    incidentId: incident.id,
-    service: incident.service,
-    title: incident.summary,
-    rootCause: incident.rootCause ?? "Root cause not recorded.",
-    fixSummary: incident.fixSummary ?? "Fix summary not recorded.",
-    risk,
-    lastCheckedAt: override?.lastCheckedAt ?? new Date(Date.now() - 37 * 60_000).toISOString(),
-    signal: override?.signal ?? SIGNALS[risk],
-    regression: risk === "high",
+    incidentId: item.id,
+    service: item.service,
+    title: item.description,
+    rootCause: item.root_cause ?? "Root cause not recorded.",
+    fixSummary: item.fix_summary ?? "Fix summary not recorded.",
+    risk: item.riskLevel,
+    lastCheckedAt: new Date().toISOString(),
+    signal: item.explanation ?? "No recurrence assessment available.",
+    regression: item.riskLevel === "high",
+    confidencePct: item.recurrenceConfidence != null ? Math.round(item.recurrenceConfidence * 100) : null,
+    daysSinceResolution: item.daysSinceResolution ?? null,
+    effectivenessDowngraded: item.effectivenessDowngraded ?? false,
+    matchedIncidentText: item.matchedIncident?.text ?? null,
   };
-};
+}
 
 export async function listWatched(): Promise<WatchedResolution[]> {
-  if (DEMO_MODE) {
-    await randomDelay();
-    const incidents = await listIncidents();
-    return incidents.filter((i) => i.status === "resolved").map(toWatched);
-  }
-  // TODO: connect to CockroachDB — SELECT resolved incidents joined with recurrence_checks
-  const res = await fetch("/api/recurrence");
-  return (await res.json()) as WatchedResolution[];
+  const data = await apiFetch<WatchListResponse>("/api/recurrence/watch-list");
+  return (data.watchList ?? []).map(adaptWatchItem);
 }
 
 export async function checkAll(): Promise<WatchedResolution[]> {
-  if (DEMO_MODE) {
-    await delay(1100);
-    const incidents = (await listIncidents()).filter((i) => i.status === "resolved");
-    const escalate = incidents[1]?.id;
-    overrides = Object.fromEntries(
-      incidents.map((i) => {
-        const risk: RiskLevel = i.id === escalate ? "high" : (i.recurrenceRisk ?? "low");
-        return [
-          i.id,
-          { risk, signal: SIGNALS[risk], lastCheckedAt: new Date().toISOString() },
-        ];
-      }),
-    );
-    return incidents.map(toWatched);
-  }
-  // TODO: connect to the AWS Lambda recurrence job (invoke on demand)
-  const res = await fetch("/api/recurrence/check", { method: "POST" });
-  return (await res.json()) as WatchedResolution[];
+  return listWatched();
 }
 
 export async function checkOne(incidentId: string): Promise<WatchedResolution | null> {
-  if (DEMO_MODE) {
-    await delay(650);
-    const incident = (await listIncidents()).find((i) => i.id === incidentId);
-    if (!incident) return null;
-    const risk: RiskLevel = incident.recurrenceRisk === "high" ? "high" : "medium";
-    overrides = {
-      ...overrides,
-      [incidentId]: { risk, signal: SIGNALS[risk], lastCheckedAt: new Date().toISOString() },
-    };
-    return toWatched(incident);
-  }
-  // TODO: connect to the AWS Lambda recurrence job for a single incident
-  const res = await fetch(`/api/recurrence/check/${incidentId}`, { method: "POST" });
-  return (await res.json()) as WatchedResolution;
+  const all = await listWatched();
+  return all.find((w) => w.incidentId === incidentId) ?? null;
 }

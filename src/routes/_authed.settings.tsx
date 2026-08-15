@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+﻿import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 
@@ -12,14 +12,11 @@ import type { ToolHealth, ToolName } from "@/services/types";
 export const Route = createFileRoute("/_authed/settings")({
   head: () => ({
     meta: [
-      { title: "Settings & Tools — Roach Watch" },
+      { title: "Settings & Tools - Roach Watch" },
       {
         name: "description",
-        content:
-          "Connection status for Groq, NVIDIA NIM embedding and reranking, CockroachDB, the CockroachDB MCP server, and AWS.",
+        content: "Live connection status for every service in the Roach Watch stack.",
       },
-      { property: "og:title", content: "Settings & Tools — Roach Watch" },
-      { property: "og:description", content: "Live health checks for every service in the Roach Watch stack." },
     ],
   }),
   component: SettingsPage,
@@ -38,7 +35,7 @@ function statusPill(status: ToolHealth["status"]) {
   );
 }
 
-function SettingsPage() {
+function ServiceStatusTable() {
   const { data, isLoading, refetch } = useQuery({ queryKey: ["tool-health"], queryFn: checkAllHealth });
   const [rows, setRows] = useState<Partial<Record<ToolName, ToolHealth>>>({});
   const [testing, setTesting] = useState<ToolName | null>(null);
@@ -53,70 +50,63 @@ function SettingsPage() {
   const merged = data?.map((row) => rows[row.tool] ?? row);
 
   return (
+    <Card className="panel">
+      <CardHeader className="flex-row items-center justify-between pb-3">
+        <CardTitle className="text-base">Service connections</CardTitle>
+        <Button variant="outline" size="sm" onClick={() => refetch()}>Re-check all</Button>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <Skeleton className="h-64 w-full" />
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="font-mono text-[10px] uppercase tracking-widest">Tool</TableHead>
+                <TableHead className="font-mono text-[10px] uppercase tracking-widest">Status</TableHead>
+                <TableHead className="font-mono text-[10px] uppercase tracking-widest">Latency</TableHead>
+                <TableHead className="font-mono text-[10px] uppercase tracking-widest">Last checked</TableHead>
+                <TableHead />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {merged?.map((row) => (
+                <TableRow key={row.tool}>
+                  <TableCell>
+                    <div className="text-sm font-medium">{row.tool}</div>
+                    <div className="font-mono text-[11px] text-muted-foreground">{row.detail}</div>
+                  </TableCell>
+                  <TableCell>{statusPill(row.status)}</TableCell>
+                  <TableCell className="font-mono text-xs">{row.latencyMs === null ? "-" : `${row.latencyMs}ms`}</TableCell>
+                  <TableCell className="font-mono text-xs text-muted-foreground">
+                    {new Date(row.lastChecked).toISOString().replace("T", " ").slice(0, 19)}Z
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button size="sm" variant="outline" onClick={() => test(row.tool)} disabled={testing === row.tool}>
+                      {testing === row.tool ? "Testing..." : "Test Connection"}
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function SettingsPage() {
+  return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Settings / Tools</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Every service in the stack, named and accounted for. Health checks are live, not simulated.
-          </p>
-        </div>
-        <Button variant="outline" onClick={() => refetch()}>
-          Re-check all
-        </Button>
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">Settings / Tools</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Every service in the stack, named and accounted for. Health checks are live, not simulated.
+        </p>
       </div>
 
-      <Card className="panel">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Service connections</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <Skeleton className="h-64 w-full" />
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="font-mono text-[10px] uppercase tracking-widest">Tool</TableHead>
-                  <TableHead className="font-mono text-[10px] uppercase tracking-widest">Status</TableHead>
-                  <TableHead className="font-mono text-[10px] uppercase tracking-widest">Latency</TableHead>
-                  <TableHead className="font-mono text-[10px] uppercase tracking-widest">
-                    Last checked
-                  </TableHead>
-                  <TableHead />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {merged?.map((row) => (
-                  <TableRow key={row.tool}>
-                    <TableCell>
-                      <div className="text-sm font-medium">{row.tool}</div>
-                      <div className="font-mono text-[11px] text-muted-foreground">{row.detail}</div>
-                    </TableCell>
-                    <TableCell>{statusPill(row.status)}</TableCell>
-                    <TableCell className="font-mono text-xs">
-                      {row.latencyMs === null ? "—" : `${row.latencyMs}ms`}
-                    </TableCell>
-                    <TableCell className="font-mono text-xs text-muted-foreground">
-                      {new Date(row.lastChecked).toISOString().replace("T", " ").slice(0, 19)}Z
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => test(row.tool)}
-                        disabled={testing === row.tool}
-                      >
-                        {testing === row.tool ? "Testing…" : "Test Connection"}
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+      <ServiceStatusTable />
     </div>
   );
 }

@@ -1,79 +1,87 @@
-import { MEMORY_RECORDS } from "./memoryRecords";
-import type { MemoryRecord, MemorySearchResult } from "./types";
-import { delay, randomDelay } from "./types";
+﻿import type { MemoryRecord, MemorySearchResult } from "./types";
+import { apiFetch } from "./apiClient";
+import { getIncident, createIncident } from "./incidentService";
 
-// Flip to false once NIM embedding + CockroachDB vector index + NIM reranker are wired.
-const DEMO_MODE = true;
+interface BackendSearchResult {
+  id: string;
+  service: string | null;
+  text: string;
+  root_cause: string | null;
+  fix_summary: string | null;
+  created_at: string;
+  score: number;
+  retrievedAfterMs: number;
+  dbLatencyMs: number;
+}
 
-let liveRecords: MemoryRecord[] = [];
+interface SearchResponse {
+  query: string;
+  results: BackendSearchResult[];
+  totalLatencyMs: number;
+}
 
-const score = (record: MemoryRecord, query: string) => {
-  const q = query.toLowerCase().trim();
-  if (!q) return 0.62 + Math.random() * 0.2;
-  const haystack = `${record.title} ${record.rootCause} ${record.service} ${record.resolution}`.toLowerCase();
-  const terms = q.split(/\s+/).filter(Boolean);
-  const hits = terms.filter((t) => haystack.includes(t)).length;
-  return Math.min(0.97, 0.44 + (hits / Math.max(terms.length, 1)) * 0.5 + Math.random() * 0.06);
-};
+function normalizeScore(score: number): number {
+  return Math.max(0, Math.min(1, (score + 20) / 40));
+}
+
+function adaptResult(r: BackendSearchResult): MemorySearchResult {
+  const record: MemoryRecord = {
+    id: r.id,
+    recordNumber: 0,
+    service: r.service ?? "unspecified",
+    title: r.text,
+    rootCause: r.root_cause ?? "Not yet analyzed",
+    resolution: r.fix_summary ?? "Not yet resolved",
+    writtenAt: r.created_at,
+    committedLatencyMs: r.dbLatencyMs,
+  };
+  return {
+    record,
+    similarityScore: normalizeScore(r.score),
+    retrievedAtMs: r.retrievedAfterMs,
+    committedLatencyMs: r.dbLatencyMs,
+  };
+}
 
 export async function searchMemory(query: string): Promise<MemorySearchResult[]> {
-  if (DEMO_MODE) {
-    await randomDelay();
-    const all = [...liveRecords, ...MEMORY_RECORDS];
-    return all
-      .map((record) => ({
-        record,
-        similarityScore: score(record, query),
-        retrievedAtMs: 8 + Math.round(Math.random() * 26),
-        committedLatencyMs: record.committedLatencyMs,
-      }))
-      .sort((a, b) => b.similarityScore - a.similarityScore)
-      .slice(0, 5);
-  }
-  // TODO: connect search bar to NVIDIA NIM embedding API (query embedding) →
-  // CockroachDB vector index query → NVIDIA NIM reranker API (reorder results)
-  const res = await fetch(`/api/memory/search?q=${encodeURIComponent(query)}`);
-  return (await res.json()) as MemorySearchResult[];
+  const result = await apiFetch<SearchResponse>(`/api/memory/search?q=${encodeURIComponent(query)}`);
+  return result.results.map(adaptResult);
 }
 
 export async function getRecord(id: string): Promise<MemoryRecord | null> {
-  if (DEMO_MODE) {
-    await randomDelay();
-    return [...liveRecords, ...MEMORY_RECORDS].find((r) => r.id === id) ?? null;
-  }
-  // TODO: connect to CockroachDB — SELECT * FROM memory_records WHERE id = $1
-  const res = await fetch(`/api/memory/${id}`);
-  return (await res.json()) as MemoryRecord;
+  const incident = await getIncident(id);
+  if (!incident) return null;
+  return {
+    id: incident.id,
+    recordNumber: 0,
+    service: incident.service,
+    title: incident.summary,
+    rootCause: incident.rootCause ?? "Not yet analyzed",
+    resolution: incident.fixSummary ?? "Not yet resolved",
+    writtenAt: incident.triggeredAt,
+    committedLatencyMs: 0,
+  };
 }
 
-/** Writes a new record and returns it plus the commit latency, immediately queryable. */
 export async function writeRecord(input: {
   service: string;
   title: string;
   rootCause: string;
   resolution: string;
 }): Promise<MemoryRecord> {
-  if (DEMO_MODE) {
-    await delay(180 + Math.round(Math.random() * 160));
-    const highest = Math.max(...[...liveRecords, ...MEMORY_RECORDS].map((r) => r.recordNumber));
-    const record: MemoryRecord = {
-      id: `rec-${highest + 1}`,
-      recordNumber: highest + 1,
-      service: input.service,
-      title: input.title,
-      rootCause: input.rootCause,
-      resolution: input.resolution,
-      writtenAt: new Date().toISOString(),
-      committedLatencyMs: 120 + Math.round(Math.random() * 240),
-    };
-    liveRecords = [record, ...liveRecords];
-    return record;
-  }
-  // TODO: connect to CockroachDB — INSERT INTO memory_records (embedding via NVIDIA NIM) RETURNING *
-  const res = await fetch("/api/memory", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input),
+  const incident = await createIncident({
+    service: input.service,
+    severity: "medium",
+    description: input.title,
   });
-  return (await res.json()) as MemoryRecord;
+  return {
+    id: incident.id,
+    recordNumber: 0,
+    service: incident.service,
+    title: incident.summary,
+    rootCause: incident.rootCause ?? input.rootCause,
+    resolution: incident.fixSummary ?? input.resolution,
+    writtenAt: incident.triggeredAt,
+    committedLatencyMs: 0,
+  };
 }

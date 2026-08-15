@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+﻿import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { Bell, ChevronDown, LogOut } from "lucide-react";
 
@@ -13,27 +13,30 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/context/auth-context";
-import { getClusterStatus } from "@/services/clusterService";
+import { getClusterInfo } from "@/services/clusterInfoService";
 import { cn } from "@/lib/utils";
 
+/**
+ * Real cluster state via the CockroachDB Managed MCP Server - no
+ * simulated node counts. "state" (e.g. "CREATED") is CockroachDB's own
+ * real cluster status field, the only genuine health signal exposed on
+ * this plan.
+ */
 export function ClusterHealthPill() {
-  const { data } = useQuery({
-    queryKey: ["cluster"],
-    queryFn: getClusterStatus,
-    refetchInterval: 5000,
+  const { data, isError } = useQuery({
+    queryKey: ["cluster-info"],
+    queryFn: getClusterInfo,
+    refetchInterval: 30000,
+    retry: false,
   });
 
-  const nodes = data?.nodes ?? [];
-  const down = nodes.filter((n) => n.state !== "healthy").length;
-  const label = !data
-    ? "Checking cluster…"
-    : down === 0
-      ? `Cluster healthy · ${nodes.length}/${nodes.length} nodes`
-      : down < nodes.length
-        ? `Degraded · ${nodes.length - down}/${nodes.length} nodes serving`
-        : "Cluster down";
+  const label = isError
+    ? "Cluster unreachable"
+    : !data
+      ? "Checking cluster..."
+      : `${data.name} - ${data.state}`;
 
-  const tone = !data || down === 0 ? "healthy" : down < nodes.length ? "degraded" : "critical";
+  const tone = isError ? "critical" : !data ? "degraded" : "healthy";
 
   return (
     <div className="flex items-center gap-2 rounded-full border border-border bg-elevated px-3 py-1.5">
@@ -71,7 +74,7 @@ function UserMenu() {
           </span>
           <div className="hidden leading-tight sm:block">
             <div className="text-xs font-medium">{user?.name ?? "Operator"}</div>
-            <div className="font-mono text-[10px] text-muted-foreground">{user?.role ?? "on-call · SRE"}</div>
+            <div className="font-mono text-[10px] text-muted-foreground">{user?.role ?? "on-call"}</div>
           </div>
           <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
         </button>

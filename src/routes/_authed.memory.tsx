@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+﻿import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Check, PlusCircle, Search } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -17,16 +17,11 @@ export const Route = createFileRoute("/_authed/memory")({
   }),
   head: () => ({
     meta: [
-      { title: "Memory Explorer — Roach Watch" },
+      { title: "Memory Explorer - Roach Watch" },
       {
         name: "description",
         content:
-          "Semantic search over past incidents with similarity scores and write→read provenance stamps down to the millisecond.",
-      },
-      { property: "og:title", content: "Memory Explorer — Roach Watch" },
-      {
-        property: "og:description",
-        content: "Ask the memory anything — provenance-stamped retrieval with no indexing delay.",
+          "Semantic search over past incidents with similarity scores and write-to-read provenance stamps down to the millisecond.",
       },
     ],
   }),
@@ -47,14 +42,16 @@ function MemoryExplorer() {
     setQuery(q);
   }, [q]);
 
+  // Only search when there is an actual query - an empty string on first
+  // load should not silently hit the backend and hang.
   const { data, isFetching } = useQuery({
     queryKey: ["memory", query],
     queryFn: () => searchMemory(query),
+    enabled: query.trim().length > 0,
   });
 
-  const simulate = async () => {
+  const createTestIncident = async () => {
     setStage(1);
-    // TODO: replace with a real INSERT via CockroachDB + NVIDIA NIM embedding of the new record
     const record = await writeRecord({
       service: "cart-service",
       title: "Elevated 5xx on PUT /cart/items after pool resize",
@@ -69,7 +66,7 @@ function MemoryExplorer() {
   };
 
   const steps = [
-    { label: "Write commits", detail: commitMs ? `${commitMs}ms` : "…" },
+    { label: "Write commits", detail: commitMs ? `${commitMs}ms` : "..." },
     { label: "Immediately queryable", detail: "0ms indexing delay" },
     { label: "Appears in search results", detail: "same view" },
   ];
@@ -79,7 +76,7 @@ function MemoryExplorer() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Memory Explorer</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Synchronous retrieval with provenance — every result says exactly where it came from and how fast
+          Synchronous retrieval with provenance - every result says exactly where it came from and how fast
           it committed.
         </p>
       </div>
@@ -98,27 +95,25 @@ function MemoryExplorer() {
               <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Ask the memory anything…"
+                placeholder="Ask the memory anything..."
                 className="pl-9"
               />
             </div>
-            <Button type="submit" disabled={isFetching}>
-              {isFetching ? "Retrieving…" : "Search memory"}
+            <Button type="submit" disabled={isFetching || !input.trim()}>
+              {isFetching ? "Retrieving..." : "Search memory"}
             </Button>
-            <Button type="button" variant="outline" onClick={simulate} disabled={stage === 1}>
+            <Button type="button" variant="outline" onClick={createTestIncident} disabled={stage === 1}>
               <PlusCircle className="mr-1.5 h-4 w-4" />
-              Simulate new incident
+              Create test incident
             </Button>
           </form>
-          {/* TODO: connect search bar to NVIDIA NIM embedding API (query embedding) → CockroachDB
-              vector index query → NVIDIA NIM reranker API (reorder results) */}
         </CardContent>
       </Card>
 
       {stage > 0 && (
         <Card className="panel border-primary/40">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Write → Read, live</CardTitle>
+            <CardTitle className="text-sm">Write to Read, live</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap items-center gap-3">
@@ -140,7 +135,7 @@ function MemoryExplorer() {
                     <span className="text-xs font-medium">{step.label}</span>
                     <span className="font-mono text-[11px] opacity-80">{step.detail}</span>
                   </div>
-                  {i < steps.length - 1 && <span className="font-mono text-muted-foreground">→</span>}
+                  {i < steps.length - 1 && <span className="font-mono text-muted-foreground">-&gt;</span>}
                 </div>
               ))}
             </div>
@@ -149,6 +144,11 @@ function MemoryExplorer() {
       )}
 
       <div className="space-y-3">
+        {query.trim().length === 0 && stage === 0 && (
+          <p className="text-sm text-muted-foreground">
+            Search for something above, or create a test incident to see write-then-read in action.
+          </p>
+        )}
         {isFetching && Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-32 w-full" />)}
         {!isFetching &&
           data?.map((result) => (
@@ -157,7 +157,7 @@ function MemoryExplorer() {
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="font-mono text-xs text-primary">
-                      {result.record.service} · {result.record.id}
+                      {result.record.service} - {result.record.id}
                     </div>
                     <h2 className="mt-1 text-sm font-medium">{result.record.title}</h2>
                   </div>
@@ -166,9 +166,9 @@ function MemoryExplorer() {
                 <p className="text-sm text-muted-foreground">{result.record.rootCause}</p>
                 <p className="text-xs text-foreground/70">Resolution: {result.record.resolution}</p>
                 <div className="rounded-md border border-primary/30 bg-primary/10 px-3 py-2 font-mono text-[11px] text-primary">
-                  Retrieved from record #{result.record.recordNumber}, written{" "}
+                  Retrieved from {result.record.id.slice(0, 8)}..., written{" "}
                   {new Date(result.record.writtenAt).toISOString().replace("T", " ").slice(0, 16)} UTC,
-                  committed in {result.committedLatencyMs}ms · read served in {result.retrievedAtMs}ms
+                  committed in {result.committedLatencyMs}ms - read served in {result.retrievedAtMs}ms
                 </div>
               </CardContent>
             </Card>
@@ -177,3 +177,4 @@ function MemoryExplorer() {
     </div>
   );
 }
+
