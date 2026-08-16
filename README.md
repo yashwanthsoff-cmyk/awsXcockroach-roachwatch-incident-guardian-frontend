@@ -12,7 +12,7 @@ Every other AI memory framework treats application state and memory as two syste
 - [Tech Stack](#tech-stack)
 - [Setup & Run Instructions](#setup--run-instructions)
 - [Environment Variables](#environment-variables)
-- [Project Structure](#project-structure)
+- [Project Structure](#project-structure)                                                                                                                                        
   *## 🚀 Deployment*
 
 - **Frontend:** Vercel
