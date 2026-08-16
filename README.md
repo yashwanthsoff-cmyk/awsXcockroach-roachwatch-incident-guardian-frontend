@@ -13,7 +13,12 @@ Every other AI memory framework treats application state and memory as two syste
 - [Setup & Run Instructions](#setup--run-instructions)
 - [Environment Variables](#environment-variables)
 - [Project Structure](#project-structure)
+  *## 🚀 Deployment*
 
+- **Frontend:** Vercel
+- **Backend:** Render
+- **Database:** CockroachDB Cloud
+- **Storage:** AWS S3
  Architecture
 
 Alert (webhook / manual / demo)
