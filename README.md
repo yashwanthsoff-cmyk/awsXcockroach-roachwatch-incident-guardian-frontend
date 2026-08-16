@@ -1,4 +1,4 @@
-
+NOTE:https://github.com/yashwanthsoff-cmyk/awsXcockroach-roach-watch-backend.git     for BACKEND
 Roach Watch — Autonomous Incident Response & Memory Engine
 
 Roach Watch is an autonomous incident-response and memory engine built on CockroachDB. It ingests incidents, retrieves and reranks historically similar incidents, generates evidence-grounded root cause analysis, tracks incident lifecycle state, and — its core differentiator — continuously validates whether its own past advice actually held up over time.
